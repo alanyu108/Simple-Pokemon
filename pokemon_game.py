@@ -175,13 +175,19 @@ class Grid:
         return new_grid
     
     def __str__(self):
-        grid_string = "\n"
-        for row in self.grid:
-            for col in row:
+        top = " "+"".join(["---" for x in range(len(self.grid))])
+        grid_string = top + "\n"
+        for i, row in enumerate(self.grid):
+            
+            for j, col in enumerate(row):
+                if j == 0:
+                    grid_string += "|"
                 grid_string += f" {col}"
+                if j == len(self.grid[0]) - 1:
+                    grid_string += "|"
             grid_string += "\n"
         
-        return grid_string[:-1]
+        return grid_string[:-1] + "\n" + top
 
 
 def main():
@@ -189,7 +195,7 @@ def main():
     alan = Player('Alan', 'male', 'angry', 1000)
     pika= starter_pokemon[0]
     alan.add_pokemon(Pokemon(pika['name'], pika['health'], pika['gender'], pika['nature']))
-    grid = Grid(10, 10)
+    grid = Grid(15, 15)
     print(grid)
     
 
