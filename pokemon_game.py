@@ -184,6 +184,10 @@ class Grid_Tiles:
 
 class Grid:
     def __init__(self, row, col, player):
+        self.win = 0
+        self.lose = 0
+
+
         self.store_position = []
         self.player_position = []
         self.store = Store()
@@ -309,72 +313,79 @@ class Grid:
             enemy_pokemon = self.pokemons.pop(math.floor(random.random() * len(self.pokemons)))
             print(f"A random {enemy_pokemon.name} appears!\n")
             print(enemy_pokemon)
+            print()
 
-            player_pokemon = self.player.pokemon
-            select_pokemon = selection_terminal([x.name for x in player_pokemon], "Select your pokemon")
-            if select_pokemon != -1:
-                battle_pokemon = player_pokemon[select_pokemon]
-                battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.health, battle_pokemon.health)
-                battle_pokemon_health = battle_pokemon.health
-                enemy_pokemon_health = enemy_pokemon.health
+            used_pokemon = []
+            while True:
+                player_pokemon = self.player.pokemon
+                if len(player_pokemon) == len(used_pokemon):
+                    self.lose +=1
+                    print("You have lost this game. :(")
+                    return 
+                select_pokemon = selection_terminal([x.name for x in player_pokemon if x.name not in used_pokemon], "Select your pokemon.")
+                if select_pokemon != -1:
+                    battle_pokemon = player_pokemon[select_pokemon]
+                    battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.health, battle_pokemon.health)
+                    battle_pokemon_health = battle_pokemon.health
+                    enemy_pokemon_health = enemy_pokemon.health
 
 
-                while battle_pokemon_health > 0 or enemy_pokemon_health > 0:
-                    player_action = selection_terminal(["Attack", "Items", "Run"], "Select Action")
-                    if player_action != -1:
-                        if player_action == 0:
-                            battle_attack = battle_pokemon.attack()
-                            print(f"{battle_pokemon.name} has attacked. It has dealt {battle_attack} damage.")
-                            enemy_pokemon_health -= battle_attack
-                            if enemy_pokemon_health <= 0:
-                                enemy_pokemon_health = 0
-                                print("You have won this battle!!!")
-                                battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
-                                return
-                            else:
-                                battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
-                        elif player_action == 1:
-                            items = [f"{k}, Stock: {v} \n" for k, v in list(self.player.bag.items())if v > 0]
-                            if len(items) == 0:
-                                print("You have no items. Go to the store if you would like to purchase some items.\n")
-                                return
-                            select_items = selection_terminal(items, "Select item you would like to use.")
+                    while battle_pokemon_health > 0 or enemy_pokemon_health > 0:
+                        player_action = selection_terminal(["Attack", "Items", "Run"], "Select Action")
+                        if player_action != -1:
+                            if player_action == 0:
+                                battle_attack = battle_pokemon.attack()
+                                print(f"{battle_pokemon.name} has attacked. It has dealt {battle_attack} damage.")
+                                enemy_pokemon_health -= battle_attack
+                                if enemy_pokemon_health <= 0:
+                                    enemy_pokemon_health = 0
+                                    print("You have won this battle!!!")
+                                    battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
+                                    return
+                            elif player_action == 1:
+                                items = [f"{k}, Stock: {v} \n" for k, v in list(self.player.bag.items())if v > 0]
+                                if len(items) != 0:
+                                    select_items = selection_terminal(items, "Select item you would like to use.")
 
-                            if select_items != -1:
-                                use_item = items[select_items].split(",")[0]
-                                if use_item == "Health Potion": #health potion
-                                    self.player.bag[use_item] -= 1
-                                    battle_pokemon_health = battle_pokemon.health
-                                elif use_item == 'Pokeball': #pokeball
-                                    self.player.bag[use_item] -= 1
-                                    chance_to_catch = math.floor(random.random() * 100)
-                                    print("Using pokeball")
-                                    if chance_to_catch <= 30:
-                                        print("Congrats, you have captured the pokemon!!!")
-                                        self.player.add_pokemon(enemy_pokemon)
-                                        return
+                                    if select_items != -1:
+                                        use_item = items[select_items].split(",")[0]
+                                        if use_item == "Health Potions": #health potion
+                                            self.player.bag[use_item] -= 1
+                                            print(f"Used health potion. Restored hp to {battle_pokemon.health}")
+                                            battle_pokemon_health = battle_pokemon.health
+                                        elif use_item == 'Pokeball': #pokeball
+                                            self.player.bag[use_item] -= 1
+                                            chance_to_catch = math.floor(random.random() * 100)
+                                            print("Using pokeball")
+                                            if chance_to_catch <= 20:
+                                                print("Congrats, you have captured the pokemon!!!")
+                                                self.player.add_pokemon(enemy_pokemon)
+                                                return
+                                            else:
+                                                print("The pokemon has escaped your pokeball. :(\n")
                                     else:
-                                        print("The pokemon has escaped your pokeball. :(\n")
+                                        return
+                                else:
+                                    print("You have no items. Go to the store if you would like to purchase some items.\n")
+                            elif player_action == 2:
+                                chance_to_run = math.floor(random.random() * 100)
+                                if chance_to_run <= 20:
+                                    print("You have fled this fight.")
+                                    return;
+                        else:
+                            return
+                        enemy_attack = enemy_pokemon.attack()
+                        battle_pokemon_health -= enemy_attack
+                        print(f"The wild {enemy_pokemon.name} attacks. It has dealt {enemy_attack} damage")
+                        if battle_pokemon_health <= 0:
+                            used_pokemon.append(battle_pokemon.name)
+                            battle_pokemon_health = 0
+                            battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
+                            break;
 
-                            else:
-                                return
-                        elif player_action == 2:
-                            chance_to_run = math.floor(random.random() * 100)
-                            if chance_to_run <= 100:
-                                print("You have fled this fight.")
-                                return;
-                    else:
-                        return
-                    enemy_attack = enemy_pokemon.attack()
-                    battle_pokemon_health -= enemy_attack
-                    print(f"The wild {enemy_pokemon.name} attacks. It has dealt {enemy_attack} damage")
-                    if battle_pokemon_health <= 0:
-                        print("You have lost this game. :(")
-                        return
-
-                    battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
-            else:
-                return
+                        battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon_health, battle_pokemon_health)
+                else:
+                    return
            
 
 
@@ -446,7 +457,7 @@ def start_game():
     grid = Grid(12, 12, player)
     print(grid)
 
-    while True:
+    while grid.win + grid.lose == 0:
         # Wait for the next event.
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'up':
