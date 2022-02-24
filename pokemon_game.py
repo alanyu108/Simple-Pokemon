@@ -61,6 +61,8 @@ def selection_terminal(choices, message):
             display_state(select)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'space':
             return select
+        if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+            return -1
         if keyboard.is_pressed("ctrl + c"):
             break
 
@@ -185,19 +187,20 @@ class Grid:
         self.store_position = []
         self.player_position = []
         self.store = Store()
-        self.store_num = 1
-        self.num = {
-                "store": 1,
-                "trainer": 2, 
-                "pokemon": 3, 
-                "pokeball": 4,
-                "player": 5,
-            }
         self.player = player
+        self.pokemons = [Pokemon(x["name"],x["health"],x["gender"] ,x["nature"]) for x in game_pokemon]
+        self.num = {
+            "store": 1,
+            "trainer": 2, 
+            "pokemon": 3, 
+            "pokeball": 4,
+            "player": 5,
+        }
+
+
         trainer = math.floor(math.sqrt(row + col))
         pokemon = trainer * 2
         self.grid = self.create_grid(row, col, 1, trainer, pokemon, pokemon - 2 ,1 )
-        self.pokemons = [Pokemon(x["name"],x["health"],x["gender"] ,x["nature"]) for x in game_pokemon]
     
     def create_grid(self, row, col, store, trainer, pokemon, pokeball, player):
         #generates a random row and col
@@ -237,22 +240,14 @@ class Grid:
         return base
     
     def __str__(self):
-        new_grid = []
-        for row in self.grid:
-            temp_grid = []
-            for col in row:
-                tile = Grid_Tiles(col, self.player.gender)
-                temp_grid.append(tile)
-            new_grid.append(temp_grid)
-
-
         top = " "+"".join(["---" for x in range(len(self.grid))])
         grid_string = top + "\n"
-        for row in new_grid:
+        for row in self.grid:
             for j, col in enumerate(row):
+                tile = Grid_Tiles(col, self.player.gender)
                 if j == 0:
                     grid_string += "|"
-                grid_string += f"{col} "
+                grid_string += f"{tile} "
                 if j == len(self.grid[0]) - 1:
                     grid_string += "|"
             grid_string += "\n"
@@ -261,7 +256,7 @@ class Grid:
 
     def handle_terrain(self, row, col, player_num):
         position = self.grid[row][col]
-        if position == 4:
+        if position == self.num['pokeball']:
             self.player.add_item('Pokeball')
             self.grid[row][col] = player_num
             print("You have collected a pokeball!!!")
@@ -278,8 +273,13 @@ class Grid:
                     items.append([f"{item_name}, Cost: {cost}, Stock: {stock}", item_name])
 
                 select_items = selection_terminal([x[0] for x in items], "What item would you like to buy?")
-                brought_item = items[select_items][1]
-                self.store.buy(brought_item, self.player)
+                if select_items != -1:
+                    brought_item = items[select_items][1]
+                    self.store.buy(brought_item, self.player)
+                else: 
+                    return
+            elif enter == -1:
+                return
         else:
             self.grid[row][col] = player_num
 
@@ -329,11 +329,17 @@ def start_game():
     natures = ["kind", "mean", "funny", "sad", "quiet", "loud", "aggressive"]
     nature_num = selection_terminal(natures, "Select your trainer's nature. Use [up and down arrow keys] to navigate and [space] to select")
 
+    if nature_num == -1:
+        return
+
     #add user data to pokemon class
     player = Player(name, gender, natures[nature_num] , 500)
     
     #select starter pokemon and adds it to the user
     number = selection_terminal([x['name'] for x in starter_pokemon], "Select your starter pokemon. Use [up and down arrow keys] to navigate and [space] to select")
+
+    if number == -1:
+        return
     first = starter_pokemon[number]
     player.add_pokemon(Pokemon(first['name'], first['health'], first['gender'], first['nature']))
     
