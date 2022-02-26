@@ -1,6 +1,7 @@
 import random
 import math
 import keyboard
+import time
 
 
 starter_pokemon = [
@@ -117,11 +118,20 @@ class Player:
 
 
 class CPU_Trainer:
-    def __init__(self, name, money):
+    def __init__(self, name):
         self.name = name;
-        self.money = money;
+        self.money = math.floor((random.random() * 500) + 1000);
         self.pokemon = []
-
+    def __str__(self):
+        print(f"\nTrainer {self.name.capitalize()}\nPrize: ${self.money}")
+        print("Pokemon:")
+        pokemon_string = ""
+        for p in self.pokemon:
+            pokemon_string += f"\t{p.name}\n\tHealth: {p.health}\n\tGender: {p.gender}\n\tNature: {p.nature}\n\n"
+        print(pokemon_string[:-1])
+        return ""
+        
+        
 
 
 class Store:
@@ -287,7 +297,6 @@ class Grid:
             elif enter == -1:
                 return
         elif position == self.num['pokemon']:
-            
             def battle_screen(enemy, pokemon, e_health, p_health):
                 def health_bar(curr_health, max_health):
                     if curr_health <= max_health:
@@ -390,6 +399,25 @@ class Grid:
 
 
             self.grid[row][col] = player_num
+        elif position == self.num['trainer']:
+            trainer = CPU_Trainer("Bot")
+            pokemon_list = self.pokemons
+            pokemon_num = 0
+            if trainer.money <= 750:
+                pokemon_num += 1
+            elif trainer.money <= 1200:
+                pokemon_num += 2
+            else:
+                pokemon_num += 3
+            
+            for i in range(pokemon_num):
+                trainer.pokemon.append(pokemon_list.pop(math.floor(random.random() * len(pokemon_list))))
+            print(trainer)
+            self.grid[row][col] = player_num
+
+        
+
+
         else:
             self.grid[row][col] = player_num
 
@@ -488,8 +516,8 @@ def start_game():
 
 
 def main():
-    start_game()
-   
-
+     start_game()
+     
+ 
 if __name__ == '__main__':
     main()
