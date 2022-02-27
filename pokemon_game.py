@@ -1,7 +1,6 @@
 import random
 import math
 import keyboard
-import time
 
 
 starter_pokemon = [
@@ -98,7 +97,7 @@ class Player:
         self.bag = {"Health Potions": 0, "Pokeball":0}
         self.pokemon = []
     def __str__(self):
-        return f"{self.name.capitalize()}\nGender: {self.gender.capitalize()}\nNature: {self.nature.capitalize()}\nMoney: ${self.money}"
+        return f"{self.name.capitalize()}\nGender: {self.gender.capitalize()}\nNature: {self.nature.capitalize()}\nMoney: ${self.money}\n"
     def print_bag(self):
         bag_string = "Bag\n"
         for k, v in self.bag.items():
@@ -108,7 +107,7 @@ class Player:
         print("Pokemon:")
         pokemon_string = ""
         for p in self.pokemon:
-            pokemon_string += f"\n\t{p.name}\n\tHealth: {p.health}\n\tGender: {p.gender}\n\tNature: {p.nature}\n"
+            pokemon_string += f"\n\t{p.name}\n\tHealth: {p.battle_health}\n\tGender: {p.gender}\n\tNature: {p.nature}\n"
         print(pokemon_string)
         # print(",".join([x.name for x in self.pokemon]))
     def add_pokemon(self, pokemon):
@@ -123,7 +122,6 @@ class CPU_Trainer:
         self.name = name;
         self.money = random.randint(500, 1500);
         self.pokemon = []
-
     def remove(self, name):
         self.pokemon = [x for x in self.pokemon if x.name != name]
     def __str__(self):
@@ -142,12 +140,19 @@ class Store:
     def __init__(self):
         self.items = [
             {"Health Potions": {
-                "cost": 500,
-                "stock": 5
+                "cost": 250,
+                "stock": 3,
+                "description":"When in battle, use this item to restore ur pokemon's health to full",
             }},
             {"Pokeball": {
                 "cost": 250,
-                "stock": 10
+                "stock": 2,
+                "description":"When in battle with a wild pokemon and not trainers, use this item and you will have a 20% chance of capturing the pokemon",
+            }},
+            {"Healing Center": {
+                "cost": 100,
+                "stock": "Infinite",
+                "description":"Restore one of your pokemon's health to full",
             }}
         ]
     def __str__(self):
@@ -163,7 +168,16 @@ class Store:
                     inven[item]['stock']-= 1
                     print(f"Congrats, you have brought one {item}")
                 else: 
-                    print(f"You do not have enough money to buy {item}")
+                    print(f"You do not have enough money. :(")
+    def healing_center(self, pokemons):
+        select_pokemon = selection_terminal([x.name for x in pokemons], "What pokemon would you like to heal?")
+        if select_pokemon != -1:
+            for pokemon in pokemons:
+                if pokemon.name == pokemons[select_pokemon].name:
+                    pokemon.battle_health = pokemon.health
+            return pokemons
+        else: 
+            return   
 
 class Grid_Tiles:
     def __init__(self, terrain, gender):
@@ -194,7 +208,9 @@ class Grid_Tiles:
         return f"\nTerrain: {self.terrain}, Representation:{self.convert_terrain_to_emoji()}\n"
 
 
-
+def shuffle_arr(arr):
+    random.shuffle(arr)
+    return arr
 
 class Grid:
     def __init__(self, row, col, player):
@@ -207,7 +223,7 @@ class Grid:
         self.trainer_position = []
         self.store = Store()
         self.player = player
-        self.pokemons = [Pokemon(x["name"],x["health"],x["gender"] ,x["nature"]) for x in game_pokemon]
+        self.pokemons = shuffle_arr([Pokemon(x["name"],x["health"],x["gender"] ,x["nature"]) for x in game_pokemon])
         self.num = {
             "store": 1,
             "trainer": 2, 
@@ -373,8 +389,6 @@ class Grid:
                         battle_pokemon.battle_health = 0
                         battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.battle_health, battle_pokemon.battle_health)
                         break;
-
-                    # battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.battle_health, battle_pokemon.battle_health)
             else:
                 return
             
@@ -400,7 +414,10 @@ class Grid:
                 select_items = selection_terminal([x[0] for x in items], "What item would you like to buy?")
                 if select_items != -1:
                     brought_item = items[select_items][1]
-                    self.store.buy(brought_item, self.player)
+                    if brought_item == "Healing Center":
+                        self.player.pokemon = self.store.healing_center(self.player.pokemon)
+                    else:
+                        self.store.buy(brought_item, self.player)
                 else: 
                     return
             elif enter == -1:
