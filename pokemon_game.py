@@ -29,9 +29,14 @@ starter_pokemon = [
         "gender": "female"
     }
 ]
+
+#list of all the pokemon that will be in the game
 game_pokemon = [{'name': 'Oshawott', 'nature': 'Water', 'gender': 'female', 'health': 100}, {'name': 'Seaking', 'nature': 'Water', 'gender': 'female', 'health': 100}, {'name': 'Furret', 'nature': 'Normal', 'gender': 'male', 'health': 75}, {'name': 'Shelmet', 'nature': 'Bug', 'gender': 'male', 'health': 100}, {'name': 'Pancham', 'nature': 'Fighting', 'gender': 'female', 'health': 75}, {'name': 'Geodude', 'nature': 'Rock', 'gender': 'female', 'health': 75}, {'name': 'Exploud', 'nature': 'Normal', 'gender': 'female', 'health': 75}, {'name': 'Tranquill', 'nature': 'Normal', 'gender': 'female', 'health': 75}, {'name': 'Porygon-Z', 'nature': 'Normal', 'gender': 'female', 'health': 100}, {'name': 'Seviper', 'nature': 'Poison', 'gender': 'male', 'health': 100}]
 
+#allows users to select a choice from a given prompt
 def selection_terminal(choices, message):
+
+    #displays the prompt
     def display_state(select):
         print(message)
         display_string = ""
@@ -78,6 +83,8 @@ class Pokemon:
         return f"{self.name.capitalize()}\nHealth: {self.health}\nGender: {self.gender.capitalize()}\nNature: {self.nature.capitalize()}"
     def __repr__(self):
         return f"\n{self.name.capitalize()}\nHealth: {self.health}\nGender: {self.gender.capitalize()}\nNature: {self.nature.capitalize()}\n"
+
+    #each pokemon has the same attack ability with certain chances to deal more damage
     def attack(self):
         value = random.randint(0, 100)
         if value <= 40:
@@ -98,20 +105,26 @@ class Player:
         self.pokemon = []
     def __str__(self):
         return f"{self.name.capitalize()}\nGender: {self.gender.capitalize()}\nNature: {self.nature.capitalize()}\nMoney: ${self.money}\n"
+
+
     def print_bag(self):
         bag_string = "Bag\n"
         for k, v in self.bag.items():
             bag_string += f"\t{k}: {v} \n"
         print(bag_string[:-1])
+
     def print_pokemon(self):
         print("Pokemon:")
         pokemon_string = ""
         for p in self.pokemon:
             pokemon_string += f"\n\t{p.name}\n\tHealth: {p.battle_health}\n\tGender: {p.gender}\n\tNature: {p.nature}\n"
         print(pokemon_string)
-        # print(",".join([x.name for x in self.pokemon]))
+
+    #add pokemon to user's bag
     def add_pokemon(self, pokemon):
         self.pokemon.append(pokemon)
+
+    #add item to user's bag
     def add_item(self, item):
         if item in self.bag:
             self.bag[item] += 1
@@ -120,8 +133,10 @@ class Player:
 class CPU_Trainer:
     def __init__(self, name):
         self.name = name;
-        self.money = random.randint(500, 1500);
         self.pokemon = []
+
+        #the prize money is between 500 and 1500 randomly generated
+        self.money = random.randint(500, 1500);
     def remove(self, name):
         self.pokemon = [x for x in self.pokemon if x.name != name]
     def __str__(self):
@@ -135,7 +150,7 @@ class CPU_Trainer:
         
         
 
-
+#pokemon store where players can buy items and heal pokemen as well
 class Store:
     def __init__(self):
         self.items = [
@@ -169,6 +184,7 @@ class Store:
                     print(f"Congrats, you have brought one {item}")
                 else: 
                     print(f"You do not have enough money. :(")
+
     def healing_center(self, pokemons):
         select_pokemon = selection_terminal([x.name for x in pokemons], "Which pokemon would you like to heal?")
         if select_pokemon != -1:
@@ -215,13 +231,14 @@ def shuffle_arr(arr):
 
 class Grid:
     def __init__(self, row, col, player):
+        #win and lose counters
         self.win = 0
         self.lose = 0
-
 
         self.store_position = []
         self.player_position = []
         self.trainer_position = []
+
         self.store = Store()
         self.player = player
         self.pokemons = shuffle_arr([Pokemon(x["name"],x["health"],x["gender"] ,x["nature"]) for x in game_pokemon])
@@ -233,11 +250,12 @@ class Grid:
             "player": 5,
         }
 
-
+        # number of trainers and pokemon that will be on the grid given the grid dimensions
         trainer = math.floor(math.sqrt(row + col))
         pokemon = trainer * 2
         self.grid = self.create_grid(row, col, 1, trainer, pokemon, pokemon - 2 ,1 )
     
+    #generates all the terrain for the grid
     def create_grid(self, row, col, store, trainer, pokemon, pokeball, player):
         #generates a random row and col
         def gen_rand_row_col(row, col):
@@ -293,7 +311,9 @@ class Grid:
         
         return grid_string[:-1] + "\n" + top
 
+    #the battle sequence when the player encounters a trainer or wild pokemon
     def battle_stage(self, player_pokemon, enemy_pokemon, battle_type):
+        #the standard display with hp and the pokemon's names
         def battle_screen(enemy, pokemon, e_health, p_health):
             def health_bar(curr_health, max_health):
                 if curr_health <= max_health:
@@ -313,29 +333,39 @@ class Grid:
                 print(health_bar(p_health, pokemon.health))
                 print(pokemon.name)
                 print("\n")
+
+        print("".join(["---" for x in range(15)]))
         if battle_type == "pokemon":
             print(f"A random {enemy_pokemon.name} appears!\n")
             print(enemy_pokemon)
             print()
         elif battle_type == "trainer":
-            print(f"The trainer summons {enemy_pokemon.name}!!!")
+            print(f"The trainer summons {enemy_pokemon.name}!!!\n")
             print(enemy_pokemon)
             print()
 
+        #keeps track of the number of pokemon the player uses
         used_pokemon = []
         while True:
+            #if all of the player's pokemon have died, they lose
             if len(player_pokemon) == len(used_pokemon):
                 return "lose" 
+
+            #user selects their pokemon
             select_pokemon = selection_terminal([x.name for x in player_pokemon if x.name not in used_pokemon], "Select your pokemon.")
             if select_pokemon != -1:
                 battle_pokemon = player_pokemon[select_pokemon]
 
-
+                #battle start
                 while battle_pokemon.battle_health > 0 or enemy_pokemon.battle_health > 0:
                     print("".join(["---" for x in range(15)]))
                     battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.battle_health, battle_pokemon.battle_health)
+
+                    #Selection menu for player to attack, use items, or try to flee
                     player_action = selection_terminal(["Attack", "Items", "Run"], "Select Action")
                     if player_action != -1:
+
+                        #attack
                         if player_action == 0:
                             battle_attack = battle_pokemon.attack()
                             print(f"{battle_pokemon.name} has attacked. It has dealt {battle_attack} damage.")
@@ -345,18 +375,21 @@ class Grid:
                                 print("You have won this battle!!!")
                                 battle_screen(enemy_pokemon, battle_pokemon, enemy_pokemon.battle_health, battle_pokemon.battle_health)
                                 return enemy_pokemon.name
+                        #use items
                         elif player_action == 1:
                             items = [f"{k}, Stock: {v} \n" for k, v in list(self.player.bag.items())if v > 0]
                             if len(items) != 0:
                                 select_items = selection_terminal(items, "Select item you would like to use.")
 
                                 if select_items != -1:
+                                    #retrieve all items in the player's pouch
                                     use_item = items[select_items].split(",")[0]
                                     if use_item == "Health Potions": #health potion
                                         self.player.bag[use_item] -= 1
                                         print(f"Used health potion. Restored hp to {battle_pokemon.health}")
                                         battle_pokemon.battle_health = battle_pokemon.health
                                     elif use_item == 'Pokeball': #pokeball
+                                        #can only use pokeball on wild pokemon
                                         if battle_type != "trainer":
                                             self.player.bag[use_item] -= 1
                                             chance_to_catch = random.randint(0, 100)
@@ -376,6 +409,8 @@ class Grid:
                             else:
                                 print("You have no items. Go to the store if you would like to purchase some items.\n")
                                 continue
+
+                        #flee or run
                         elif player_action == 2:
                             chance_to_run = random.randint(0, 100)
                             if chance_to_run <= 20:
@@ -383,6 +418,8 @@ class Grid:
                                 return "fled";
                     else:
                         return
+                    
+                    #enemy's turn, default to just attack
                     enemy_attack = enemy_pokemon.attack()
                     battle_pokemon.battle_health -= enemy_attack
                     print(f"The wild {enemy_pokemon.name} attacks. It has dealt {enemy_attack} damage")
@@ -394,19 +431,24 @@ class Grid:
             else:
                 return
             
-
+    #when user walks anywhere but grass
     def handle_terrain(self, row, col, player_num):
         position = self.grid[row][col]
+
+        #player collecting pokeballs
         if position == self.num['pokeball']:
             self.player.add_item('Pokeball')
             self.grid[row][col] = player_num
             print("You have collected a pokeball!!!")
+        #player heads to the store
         elif position == self.num['store']:
             self.grid[row][col] = player_num
             enter = selection_terminal(["Yes", "No"], "Would you like to enter the store?")
             if enter == 0:
                 print("".join(["---" for x in range(15)]))
                 print(self.player)
+
+                #displays all the items that are in the store
                 items =[]
                 for item in self.store.items:
                     item_name = list(item.keys())[0]
@@ -414,6 +456,7 @@ class Grid:
                     stock = item[item_name]['stock']
                     items.append([f"{item_name}, Cost: {cost}, Stock: {stock}", item_name])
 
+                #user buys items
                 select_items = selection_terminal([x[0] for x in items], "What item would you like to buy?")
                 print("".join(["---" for x in range(15)]))
                 if select_items != -1:
@@ -426,6 +469,7 @@ class Grid:
                     return
             elif enter == -1:
                 return
+        #player encounters a wild pokemon
         elif position == self.num['pokemon']:
             self.grid[row][col] = player_num
             enemy_pokemon = self.pokemons.pop()
@@ -436,13 +480,15 @@ class Grid:
                 self.pokemons.append(enemy_pokemon)
             else:
                 self.win += 1
-                
+        #player encounters a trainer        
         elif position == self.num['trainer']:
             trainer = CPU_Trainer("Bot")
             fight_trainer = selection_terminal(["Yes", "No"], f"Would you like to fight this trainer {trainer.name}?")
             if fight_trainer != -1:
                 if fight_trainer == 0:
                     self.grid[row][col] = player_num
+
+                    #the number of pokemon is dependent on the trainer's money or prize
                     pokemon_num = 0
                     if trainer.money <= 750:
                         pokemon_num += 1
@@ -454,6 +500,8 @@ class Grid:
                     for _ in range(pokemon_num):
                         trainer.pokemon.append(self.pokemons.pop())
                     print(trainer)
+
+                    #fighting the trainer
                     while len(trainer.pokemon) != 0:
                         battle_state = self.battle_stage(self.player.pokemon, trainer.pokemon[-1], "trainer")
                         if battle_state == "lose":
@@ -464,6 +512,7 @@ class Grid:
                             defeated_pokemon = battle_state
                             trainer.remove(defeated_pokemon)
 
+                    #trainer is defeated
                     if len(trainer.pokemon) == 0:
                         print(f"Congrats, you have beaten trainer {trainer.name}.\n You have won ${trainer.money}.\n")
                         self.player.money += trainer.money
@@ -477,7 +526,7 @@ class Grid:
         else:
             self.grid[row][col] = player_num
 
-
+    #updated the position of the player whenever they move
     def updatePosition(self, direction):
         x, y = self.player_position
         self.grid[x][y] = 0
@@ -512,6 +561,7 @@ class Grid:
             if self.grid[x][y] != self.num['player']:
                 self.grid[x][y] = self.num['trainer']
 
+#game loop
 def run_game(player):
     #create grid
     grid = Grid(12, 12, player)
@@ -523,6 +573,7 @@ def run_game(player):
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'up':
             grid.updatePosition("up")
+            #lose condition
             if grid.lose >= 1:   
                 print("You have lost this game :(")
                 break;
@@ -548,11 +599,12 @@ def run_game(player):
         # if event.event_type == keyboard.KEY_DOWN and event.name == 'esc': 
         #     print(grid)    
         
+        #win condition 
         if grid.win >= 4:   
             print("Congrats, you have won this game!!!!")
             break;
         
-        
+        #menu that displays player info
         if event.event_type == keyboard.KEY_DOWN and event.name == 'm':    
             current_player = grid.player
             print(current_player)
@@ -562,7 +614,7 @@ def run_game(player):
         if keyboard.is_pressed("ctrl + c"):
             break
 
-            
+#start of game to use player created            
 def start_game():
     name = input("Enter your trainer name: ").strip()
 
@@ -607,12 +659,6 @@ def start_game():
         run_game(player)
     else: 
         return
-    
-        
-
-
-    
-
 
 def main():
      start_game()
