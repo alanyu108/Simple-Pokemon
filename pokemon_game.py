@@ -5,25 +5,25 @@ import keyboard
 
 starter_pokemon = [
     {
-        "name": "Pikachu", 
+        "name": "Pikachu ⚡", 
         "nature": "electric", 
         "health": 100, 
         "gender": "male"
     }, 
     {
-        "name": "Charmander", 
+        "name": "Charmander 🔥", 
         "nature": "fire", 
         "health": 100, 
         "gender": "male"
     },
     {
-        "name": "Bulbasaur", 
+        "name": "Bulbasaur 🌾", 
         "nature": "grass", 
         "health": 100, 
         "gender": "male"
     }, 
     {
-        "name": "Squirtle", 
+        "name": "Squirtle 🌊", 
         "nature": "water", 
         "health": 100, 
         "gender": "female"
@@ -170,11 +170,12 @@ class Store:
                 else: 
                     print(f"You do not have enough money. :(")
     def healing_center(self, pokemons):
-        select_pokemon = selection_terminal([x.name for x in pokemons], "What pokemon would you like to heal?")
+        select_pokemon = selection_terminal([x.name for x in pokemons], "Which pokemon would you like to heal?")
         if select_pokemon != -1:
             for pokemon in pokemons:
                 if pokemon.name == pokemons[select_pokemon].name:
                     pokemon.battle_health = pokemon.health
+                    print(f"{pokemon.name} has been healed to {pokemon.health} hp!!!")
             return pokemons
         else: 
             return   
@@ -277,8 +278,9 @@ class Grid:
         return base
     
     def __str__(self):
+        win_counter = f"Win Counter: {self.win}\n"
         top = " "+"".join(["---" for x in range(len(self.grid))])
-        grid_string = top + "\n"
+        grid_string = win_counter + top + "\n"
         for row in self.grid:
             for j, col in enumerate(row):
                 tile = Grid_Tiles(col, self.player.gender)
@@ -403,6 +405,7 @@ class Grid:
             self.grid[row][col] = player_num
             enter = selection_terminal(["Yes", "No"], "Would you like to enter the store?")
             if enter == 0:
+                print("".join(["---" for x in range(15)]))
                 print(self.player)
                 items =[]
                 for item in self.store.items:
@@ -412,6 +415,7 @@ class Grid:
                     items.append([f"{item_name}, Cost: {cost}, Stock: {stock}", item_name])
 
                 select_items = selection_terminal([x[0] for x in items], "What item would you like to buy?")
+                print("".join(["---" for x in range(15)]))
                 if select_items != -1:
                     brought_item = items[select_items][1]
                     if brought_item == "Healing Center":
@@ -434,7 +438,6 @@ class Grid:
                 self.win += 1
                 
         elif position == self.num['trainer']:
-            
             trainer = CPU_Trainer("Bot")
             fight_trainer = selection_terminal(["Yes", "No"], f"Would you like to fight this trainer {trainer.name}?")
             if fight_trainer != -1:
@@ -462,8 +465,10 @@ class Grid:
                             trainer.remove(defeated_pokemon)
 
                     if len(trainer.pokemon) == 0:
+                        print(f"Congrats, you have beaten trainer {trainer.name}.\n You have won ${trainer.money}.\n")
                         self.player.money += trainer.money
                         self.trainer_position = [ x for x in self.trainer_position if x[0] != row and x[1] != col ]
+                        self.win += len(trainer.pokemon)
                 else: 
                     self.grid[row][col] = player_num
                     return
@@ -507,35 +512,7 @@ class Grid:
             if self.grid[x][y] != self.num['player']:
                 self.grid[x][y] = self.num['trainer']
 
-            
-def start_game():
-    name = input("Enter your trainer name: ").strip()
-
-    #user selects gender, male or female
-    gender = ""
-    while True:
-        gender = input("Select the gender of your trainer (M for male and F for female):").capitalize().strip()
-        if gender == "M" or  gender == "F":
-            break;
-  
-    #user select their trainer's nature
-    natures = ["kind", "mean", "funny", "sad", "quiet", "loud", "aggressive"]
-    nature_num = selection_terminal(natures, "Select your trainer's nature. Use [up and down arrow keys] to navigate and [space] to select")
-
-    if nature_num == -1:
-        return
-
-    #add user data to pokemon class
-    player = Player(name, gender, natures[nature_num] , 500)
-    
-    #select starter pokemon and adds it to the user
-    number = selection_terminal([x['name'] for x in starter_pokemon], "Select your starter pokemon. Use [up and down arrow keys] to navigate and [space] to select")
-
-    if number == -1:
-        return
-    first = starter_pokemon[number]
-    player.add_pokemon(Pokemon(first['name'], first['health'], first['gender'], first['nature']))
-    
+def run_game(player):
     #create grid
     grid = Grid(12, 12, player)
     print(grid)
@@ -546,21 +523,31 @@ def start_game():
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'up':
             grid.updatePosition("up")
+            if grid.lose >= 1:   
+                print("You have lost this game :(")
+                break;
             print(grid)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
             grid.updatePosition("down")
+            if grid.lose >= 1:   
+                print("You have lost this game :(")
+                break;
             print(grid)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'left':
             grid.updatePosition("left")
+            if grid.lose >= 1:   
+                print("You have lost this game :(")
+                break;
             print(grid)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'right':    
             grid.updatePosition("right")
+            if grid.lose >= 1:   
+                print("You have lost this game :(")
+                break;
             print(grid)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'esc': 
-            print(grid)    
-        if grid.lose >= 1:   
-            print("You have lost this game :(")
-            break;
+        # if event.event_type == keyboard.KEY_DOWN and event.name == 'esc': 
+        #     print(grid)    
+        
         if grid.win >= 4:   
             print("Congrats, you have won this game!!!!")
             break;
@@ -574,6 +561,53 @@ def start_game():
             
         if keyboard.is_pressed("ctrl + c"):
             break
+
+            
+def start_game():
+    name = input("Enter your trainer name: ").strip()
+
+    #user selects gender, male or female
+    gender = ["Male", "Female"]
+    gender_num = selection_terminal(gender, "Select your gender. Use [UP and DOWN arrow keys] to navigate and [SPACE] to select")
+    if gender_num < 0:
+        return 
+  
+    #user select their trainer's nature
+    natures = ["kind", "mean", "funny", "sad", "quiet", "loud", "aggressive"]
+    nature_num = selection_terminal(natures, "Select your trainer's nature. Use [UP and DOWN arrow keys] to navigate and [SPACE] to select")
+
+    if nature_num < -1:
+        return
+
+    #add user data to pokemon class
+    player = Player(name, gender[gender_num], natures[nature_num] , 500)
+    
+    #select starter pokemon and adds it to the user
+    number = selection_terminal([x['name'] for x in starter_pokemon], "Select your starter pokemon. Use [UP and DOWN arrow keys] to navigate and [SPACE] to select")
+
+    if number < -1:
+        return
+    first = starter_pokemon[number]
+    player.add_pokemon(Pokemon(first['name'], first['health'], first['gender'], first['nature']))
+    display_player = "[🏃]" if player.gender == "Male" else "[🏃]"
+    print(f"Welcome to Simple Pokemon, {player.name} !!!")
+    print("To navigate around the grid, use the arrow keys and press [M] to check player info.")
+    print("Familiarize these symbols as they are pretty common on the playing grid. \n")
+    print("🌾- grass         , player can move anywhere that has grass")
+    print("🏪- pokemon store , contains purchasable items that can be useful in battle")
+    print("🦸- trainer       , defeat trainers to obtain prizes, trainers may have one or more pokemon")
+    print("👹- pokemon       , wild pokemon")
+    print("🎈- pokeball      , item that can be found on the ground that can be used to capture wild pokemon")
+    print(f"{display_player}- you, the player")
+    print("\nTo win this game, defeat or catch four pokemon. \nIf all of your pokemon die in battle, I'm sorry but you have lost.\n")
+    
+
+    play = selection_terminal(["Yes", "No"], "Are you ready to start?")
+    if play == 0:
+        run_game(player)
+    else: 
+        return
+    
         
 
 
