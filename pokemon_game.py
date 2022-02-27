@@ -232,7 +232,7 @@ def shuffle_arr(arr):
 class Grid:
     def __init__(self, row, col, player):
         #win and lose counters
-        self.win = 0
+        self.win = 1
         self.lose = 0
 
         self.store_position = []
