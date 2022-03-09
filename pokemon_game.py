@@ -1,6 +1,5 @@
 import random
 import math
-import keyboard
 
 
 starter_pokemon = [
@@ -37,39 +36,24 @@ game_pokemon = [{'name': 'Oshawott', 'nature': 'Water', 'gender': 'female', 'hea
 def selection_terminal(choices, message):
 
     #displays the prompt
-    def display_state(select):
-        print(message)
-        display_string = ""
+    def display_state():
+        display_string = []
         for i, row in enumerate(choices):
-            if i == select:
-                display_string += f"(^) {row}\n"
-            else:
-                display_string += f"( ) {row}\n"
+            display_string.append(f"({i + 1}) {row}\n")
         
-        print(display_string)
+        return display_string
         
-    select = 0
-    display_state(select)
 
     while True:
-        # Wait for the next event.
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'up':
-            select -= 1
-            if select < 0:
-                select = len(choices) - 1
-            display_state(select)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
-            select += 1
-            if select > len(choices) - 1:
-                select = 0
-            display_state(select)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'space':
-            return select
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
-            return -1
-        if keyboard.is_pressed("ctrl + c"):
+        print(message)
+        print("".join(display_state()))
+        user_input = input("Select your choice: ")
+        print("\n")
+        if user_input.isnumeric() and int(user_input)  >= 1 and int(user_input) < len(choices) + 1:
             break
+    
+    return int(user_input) - 1
+
 
 
 class Pokemon:
@@ -569,50 +553,38 @@ def run_game(player):
 
     #game state
     while True:
-        # Wait for the next event.
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+        action = selection_terminal([ "↑", "↓", "←", "→"], "Select Action: ")
+        if action == 0:
             grid.updatePosition("up")
-            #lose condition
             if grid.lose >= 1:   
                 print("You have lost this game :(")
                 break;
             print(grid)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+        if action == 1:
             grid.updatePosition("down")
             if grid.lose >= 1:   
                 print("You have lost this game :(")
                 break;
             print(grid)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'left':
+        if action == 2:
             grid.updatePosition("left")
             if grid.lose >= 1:   
                 print("You have lost this game :(")
                 break;
             print(grid)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'right':    
+        if action == 3:    
             grid.updatePosition("right")
             if grid.lose >= 1:   
                 print("You have lost this game :(")
                 break;
             print(grid)
-        # if event.event_type == keyboard.KEY_DOWN and event.name == 'esc': 
-        #     print(grid)    
         
         #win condition 
         if grid.win >= 4:   
             print("Congrats, you have won this game!!!!")
             break;
         
-        #menu that displays player info
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'm':    
-            current_player = grid.player
-            print(current_player)
-            current_player.print_bag()
-            current_player.print_pokemon()
-            
-        if keyboard.is_pressed("ctrl + c"):
-            break
+       
 
 #start of game to use player created            
 def start_game():
@@ -620,13 +592,13 @@ def start_game():
 
     #user selects gender, male or female
     gender = ["Male", "Female"]
-    gender_num = selection_terminal(gender, "Select your gender. Use [UP and DOWN arrow keys] to navigate and [SPACE] to select")
+    gender_num = selection_terminal(gender, "Select your gender. ")
     if gender_num < 0:
         return 
   
     #user select their trainer's nature
     natures = ["kind", "mean", "funny", "sad", "quiet", "loud", "aggressive"]
-    nature_num = selection_terminal(natures, "Select your trainer's nature. Use [UP and DOWN arrow keys] to navigate and [SPACE] to select")
+    nature_num = selection_terminal(natures, "Select your trainer's nature. ")
 
     if nature_num < -1:
         return
@@ -661,7 +633,10 @@ def start_game():
         return
 
 def main():
-     start_game()
+    start_game()
+    # play = selection_terminal(["Yes", "No", "↑", "↓", "←", "→"], "Are you ready to start?")
+    # print(play)
+    
      
  
 if __name__ == '__main__':
