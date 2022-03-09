@@ -2,8 +2,7 @@
 
 ## Setup
 
-Use `pip` to install the required packages listed in `requirements.txt`.
-Then run
+Install the latest version of python on your machine and run
 
 ```bash
 python pokemon_game.py
